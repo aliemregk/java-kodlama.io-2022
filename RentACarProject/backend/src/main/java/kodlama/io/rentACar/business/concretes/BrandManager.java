@@ -2,45 +2,37 @@ package kodlama.io.rentACar.business.concretes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import kodlama.io.rentACar.dataAccess.abstracts.BrandRepository;
 import kodlama.io.rentACar.business.abstracts.BrandService;
 import kodlama.io.rentACar.business.requests.CreateBrandRequest;
 import kodlama.io.rentACar.business.responses.GetAllBrandsResponse;
+import kodlama.io.rentACar.core.utilities.mappers.ModelMapperService;
 import kodlama.io.rentACar.entities.concretes.Brand;
+import lombok.AllArgsConstructor;
 
 @Service
+@AllArgsConstructor
 public class BrandManager implements BrandService {
 
     private BrandRepository brandRepository;
-
-    @Autowired
-    public BrandManager(BrandRepository brandRepository) {
-        this.brandRepository = brandRepository;
-    }
+    private ModelMapperService mapperService;
 
     @Override
     public List<GetAllBrandsResponse> getAll() {
 
         List<Brand> brands = this.brandRepository.findAll();
-        List<GetAllBrandsResponse> brandsResponse = new ArrayList<GetAllBrandsResponse>();
-
-        for (Brand brand : brands) {
-            GetAllBrandsResponse responseItem = new GetAllBrandsResponse();
-            responseItem.setId(brand.getId());
-            responseItem.setName(brand.getName());
-            brandsResponse.add(responseItem);
-        }
-        return brandsResponse;
+        return brands.stream()
+                .map(brand -> mapperService.forResponse().map(brand, GetAllBrandsResponse.class))
+                .toList();
     }
 
     @Override
     public void add(CreateBrandRequest createBrandRequest) {
-        Brand brandToAdd = new Brand();
-        brandToAdd.setName(createBrandRequest.getName());
+        Brand brandToAdd = mapperService.forRequest().map(createBrandRequest, Brand.class);
         this.brandRepository.save(brandToAdd);
     }
 
