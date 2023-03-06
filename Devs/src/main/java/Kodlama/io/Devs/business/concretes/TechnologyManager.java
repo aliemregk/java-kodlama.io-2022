@@ -1,6 +1,8 @@
 package Kodlama.io.Devs.business.concretes;
 
 import java.util.List;
+
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import Kodlama.io.Devs.business.abstracts.TechnologyService;
@@ -8,6 +10,7 @@ import Kodlama.io.Devs.business.requests.technologyRequests.CreateTechnologyRequ
 import Kodlama.io.Devs.business.requests.technologyRequests.UpdateTechnologyRequest;
 import Kodlama.io.Devs.business.responses.technologyResponses.GetAllTechnologyResponse;
 import Kodlama.io.Devs.business.responses.technologyResponses.GetByIdTechnologyResponse;
+import Kodlama.io.Devs.business.rules.TechnologyBusinessRules;
 import Kodlama.io.Devs.core.utils.mapper.MapperService;
 import Kodlama.io.Devs.dataAccess.abstracts.TechnologyRepository;
 import Kodlama.io.Devs.entities.concretes.Technology;
@@ -19,10 +22,12 @@ public class TechnologyManager implements TechnologyService {
 
     private TechnologyRepository technologyRepository;
     private MapperService mapperService;
+    private TechnologyBusinessRules technologyBusinessRules;
 
     @Override
     public List<GetAllTechnologyResponse> getAll() {
-        return mapperService.mapAllForResponse(technologyRepository.findAll(), GetAllTechnologyResponse.class);
+        return mapperService.mapAllForResponse(technologyRepository.findAll(Sort.by(Sort.Direction.ASC, "id")),
+                GetAllTechnologyResponse.class);
     }
 
     @Override
@@ -33,12 +38,13 @@ public class TechnologyManager implements TechnologyService {
 
     @Override
     public void add(CreateTechnologyRequest createTechnologyRequest) {
-        // TODO business rule
-        if (this.CheckIfSameNamedTechnologyExists(createTechnologyRequest.getName())
-                && this.CheckTechnologyName(createTechnologyRequest.getName())) {
-            Technology technologyToAdd = mapperService.mapForRequest(createTechnologyRequest, Technology.class);
-            this.technologyRepository.save(technologyToAdd);
-        }
+
+        technologyBusinessRules.checkIfTechnologyExists(createTechnologyRequest.getName());
+        technologyBusinessRules.checkIfTechnologysLanguageExists(createTechnologyRequest.getLanguageId());
+
+        Technology technologyToAdd = mapperService.mapForRequest(createTechnologyRequest, Technology.class);
+        technologyToAdd.setId(0);
+        this.technologyRepository.save(technologyToAdd);
     }
 
     @Override
@@ -49,31 +55,7 @@ public class TechnologyManager implements TechnologyService {
 
     @Override
     public void delete(int id) {
-            this.technologyRepository.deleteById(id);
-    }
-
-    /*
-     * @param {String} name
-     * Checks if there is any technology with the given name parameter.
-     * If there is, returns false otherwise returns true.
-     */
-    private boolean CheckIfSameNamedTechnologyExists(String name) {
-        if (this.getAll().stream().anyMatch(pl -> pl.getName().equals(name))) {
-            return false;
-        }
-        return true;
-    }
-
-    /*
-     * @param {String} name
-     * Checks if the given name parameter is empty or blank.
-     * If it is, returns false otherwise returns true.
-     */
-    private boolean CheckTechnologyName(String name) {
-        if (name.isEmpty() || name.isBlank()) {
-            return false;
-        }
-        return true;
+        this.technologyRepository.deleteById(id);
     }
 
 }

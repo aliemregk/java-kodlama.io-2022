@@ -6,4 +6,5 @@ import Kodlama.io.Devs.entities.concretes.Technology;
 
 public interface TechnologyRepository extends JpaRepository<Technology, Integer> {
 
+    boolean existsByName(String name);
 }
