@@ -11,6 +11,7 @@ import Kodlama.io.Devs.business.requests.technologyRequests.UpdateTechnologyRequ
 import Kodlama.io.Devs.business.responses.technologyResponses.GetAllTechnologyResponse;
 import Kodlama.io.Devs.business.responses.technologyResponses.GetByIdTechnologyResponse;
 import Kodlama.io.Devs.business.rules.TechnologyBusinessRules;
+import Kodlama.io.Devs.core.utils.exceptions.NotFoundException;
 import Kodlama.io.Devs.core.utils.mapper.MapperService;
 import Kodlama.io.Devs.dataAccess.abstracts.TechnologyRepository;
 import Kodlama.io.Devs.entities.concretes.Technology;
@@ -32,30 +33,36 @@ public class TechnologyManager implements TechnologyService {
 
     @Override
     public GetByIdTechnologyResponse getById(int id) {
-        Technology result = this.technologyRepository.findById(id).orElseThrow();
+        Technology result = technologyRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Technology not found with given ID."));
         return mapperService.mapForResponse(result, GetByIdTechnologyResponse.class);
     }
 
     @Override
     public void add(CreateTechnologyRequest createTechnologyRequest) {
-
         technologyBusinessRules.checkIfTechnologyExists(createTechnologyRequest.getName());
         technologyBusinessRules.checkIfTechnologysLanguageExists(createTechnologyRequest.getLanguageId());
 
         Technology technologyToAdd = mapperService.mapForRequest(createTechnologyRequest, Technology.class);
         technologyToAdd.setId(0);
-        this.technologyRepository.save(technologyToAdd);
+        technologyRepository.save(technologyToAdd);
     }
 
     @Override
     public void update(UpdateTechnologyRequest updateTechnologyRequest) {
+        technologyBusinessRules.checkIfTechnologyExistsById(updateTechnologyRequest.getId());
+        technologyBusinessRules.checkIfTechnologysLanguageExists(updateTechnologyRequest.getLanguageId());
+        technologyBusinessRules.checkIfTechnologyNameChanged(updateTechnologyRequest.getId(),
+                updateTechnologyRequest.getName());
+
         Technology technologyToUpdate = mapperService.mapForRequest(updateTechnologyRequest, Technology.class);
-        this.technologyRepository.save(technologyToUpdate);
+        technologyRepository.save(technologyToUpdate);
     }
 
     @Override
     public void delete(int id) {
-        this.technologyRepository.deleteById(id);
+        technologyBusinessRules.checkIfTechnologyExistsById(id);
+        technologyRepository.deleteById(id);
     }
 
 }

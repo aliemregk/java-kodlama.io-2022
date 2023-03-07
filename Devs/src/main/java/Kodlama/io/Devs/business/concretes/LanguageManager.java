@@ -11,6 +11,7 @@ import Kodlama.io.Devs.business.requests.languageRequests.UpdateLanguageRequest;
 import Kodlama.io.Devs.business.responses.languageResponses.GetAllLanguageResponse;
 import Kodlama.io.Devs.business.responses.languageResponses.GetByIdLanguageResponse;
 import Kodlama.io.Devs.business.rules.LanguageBusinessRules;
+import Kodlama.io.Devs.core.utils.exceptions.NotFoundException;
 import Kodlama.io.Devs.core.utils.mapper.MapperService;
 import Kodlama.io.Devs.dataAccess.abstracts.LanguageRepository;
 import Kodlama.io.Devs.entities.concretes.Language;
@@ -32,29 +33,33 @@ public class LanguageManager implements LanguageService {
 
     @Override
     public GetByIdLanguageResponse getById(int id) {
-        Language result = this.languageRepository.findById(id).orElseThrow();
+        Language result = languageRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Language not found with given ID."));
         return mapperService.mapForResponse(result, GetByIdLanguageResponse.class);
     }
 
     @Override
     public void add(CreateLanguageRequest createLanguageRequest) {
-
         languageBusinessRules.checkIfLanguageExists(createLanguageRequest.getName());
 
         Language languageToAdd = mapperService.mapForRequest(createLanguageRequest, Language.class);
         languageToAdd.setId(0);
-        this.languageRepository.save(languageToAdd);
+        languageRepository.save(languageToAdd);
     }
 
     @Override
     public void update(UpdateLanguageRequest updateLanguageRequest) {
+        languageBusinessRules.checkIfLanguageExistsById(updateLanguageRequest.getId());
+        languageBusinessRules.checkIfLanguageExists(updateLanguageRequest.getName());
+
         Language languageToUpdate = mapperService.mapForRequest(updateLanguageRequest, Language.class);
-        this.languageRepository.save(languageToUpdate);
+        languageRepository.save(languageToUpdate);
     }
 
     @Override
     public void delete(int id) {
-        this.languageRepository.deleteById(id);
+        languageBusinessRules.checkIfLanguageExistsById(id);
+        languageRepository.deleteById(id);
     }
 
 }
