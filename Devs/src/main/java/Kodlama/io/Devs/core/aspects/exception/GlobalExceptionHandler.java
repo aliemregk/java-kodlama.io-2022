@@ -32,7 +32,13 @@ public class GlobalExceptionHandler {
         for (FieldError fieldError : methodArgumentNotValidException.getBindingResult().getFieldErrors()) {
             validationProblemDetails.getValidationErrors().put(fieldError.getField(), fieldError.getDefaultMessage());
         }
-
         return validationProblemDetails;
     }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(code = HttpStatus.BAD_REQUEST)
+    public ProblemDetails handleException(Throwable ex) {
+        return new ProblemDetails(ex.getMessage());
+    }
+
 }

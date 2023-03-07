@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import Kodlama.io.Devs.core.utils.exceptions.BusinessException;
 import Kodlama.io.Devs.dataAccess.abstracts.LanguageRepository;
 import Kodlama.io.Devs.dataAccess.abstracts.TechnologyRepository;
+import Kodlama.io.Devs.entities.concretes.Technology;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -25,4 +26,18 @@ public class TechnologyBusinessRules {
             throw new BusinessException("Given language does not exist.");
         }
     }
+
+    public void checkIfTechnologyExistsById(int technologyId) {
+        if (technologyRepository.findById(technologyId).isEmpty()) {
+            throw new BusinessException("Technology not found with given ID.");
+        }
+    }
+
+    public void checkIfTechnologyNameChanged(int technologyId, String technologyName) {
+        Technology result = technologyRepository.findById(technologyId).orElseThrow();
+        if(!result.getName().equals(technologyName)){
+            checkIfTechnologyExists(technologyName);
+        }
+    }
+
 }

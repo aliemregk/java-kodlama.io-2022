@@ -17,4 +17,10 @@ public class LanguageBusinessRules {
             throw new BusinessException("Language already exists.");
         }
     }
+
+    public void checkIfLanguageExistsById(int languageId) {
+        if(languageRepository.findById(languageId).isEmpty()){
+            throw new BusinessException("Language not found with given ID.");
+        }
+    }
 }
